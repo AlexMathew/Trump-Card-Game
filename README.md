@@ -1,5 +1,5 @@
-# CRICKET TRUMP CARDS #
-### github.com/AlexMathew/Cricket-Trump-Cards ###
+# CRICKET TRUMP CARD GAME #
+### github.com/AlexMathew/Trump-Card-Game ###
 
 
 *** To bring back some memories ***
