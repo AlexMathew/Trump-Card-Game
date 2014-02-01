@@ -1,6 +1,7 @@
 # CRICKET TRUMP CARD GAME #
 ### github.com/AlexMathew/Trump-Card-Game ###
 
+##### Runs on urllib and BeautifulSoup #####
 
 *** To bring back some memories ***
 
@@ -16,4 +17,4 @@ A while back, for reasons unknown, I started thinking about these again. I remem
 To put it simply, extract the stats in real time from [Cricinfo](http://espncricinfo.com). 
 
 The [Players database homepage](http://espncricinfo.com/ci/content/player/index.html) contains links to individual team pages. Each team page contains links to the pages of all the players currently active, or still under contract. These player pages contain the stats of that player.
-The required regular expressions are used to extract information that appears in this pattern.
+BeautifulSoup is used to extract the links from the page. Granted, it is slower than using regular expressions, but it gives so much more functionality and makes it easier to work.
