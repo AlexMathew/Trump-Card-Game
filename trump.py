@@ -1,16 +1,9 @@
-"""
-TO DO :
-	Try using requests instead of urllib
-
-"""
-
-
-import re
 import urllib
 import random
 import os
 import datetime
 import sys
+from bs4 import BeautifulSoup as Soup
 
 
 def clear_old_cache(cache_dir):
@@ -18,9 +11,8 @@ def clear_old_cache(cache_dir):
 	This method takes the directory path as its argument and clears out all the files in that directory.
 	"""
 
-	root, dirs, files = os.walk(cache_dir).next()
-	for filename in files:
-		os.remove(os.path.join(root, filename))
+	for item in os.listdir(cache_dir):
+		os.remove(str(cache_dir + item))
 
 
 def cache_text(complete_path, text):
@@ -48,16 +40,16 @@ class TeamSet(object):
 		This method reads the HTML content from the Players list homepage on Cricinfo.
 		"""
 
-		cache_dir = "C:/TrumpCards_cache"
+		cache_dir = "C:/TrumpCards_cache/"
 		filename = str(datetime.datetime.now())[:10] + "_homepage"
-		complete_path = cache_dir + "/" + filename + ".txt"
+		complete_path = cache_dir + filename + ".txt"
 		
 		if os.path.exists(complete_path):
 			with open(complete_path, 'r') as f:
 				self.homepage_text = f.read()
 				f.close()
 		else:
-			print '\nEXTRACTING DATA..\n(The time taken depends on the speed of your Internet connection..\n'
+			print '\nEXTRACTING DATA..\n(The time taken depends on the speed of your Internet connection)\n'
 			homepage_url = "http://espncricinfo.com/ci/content/player/index.html"
 			try:
 				uf = urllib.urlopen(homepage_url)
@@ -66,14 +58,28 @@ class TeamSet(object):
 			self.homepage_text = uf.read()
 			clear_old_cache(cache_dir)
 			cache_text(complete_path, self.homepage_text)
-
+			
 	def generate_teams(self):
 		"""
 		This method uses regular expressions to extract the links to the various team pages.
 		"""
 
-		team_generator_re = r'<li class="pad"><a href="([\w/\.?=]+)"[\s]*>([\w\s\']+)</a></li>'
-		self.full_members = re.findall(team_generator_re, self.homepage_text)
+		soup = Soup(self.homepage_text)
+		li_set = soup.findAll('li')
+		self.full_members = [(li_set[i+1].a.get('href'), li_set[i+1].text) 
+							 for i, link in enumerate(li_set) if link.text == '|'][:10]
+
+
+
+def get_index(soup):
+	
+	usa_tracker = 0
+	for i, link in enumerate(soup.findAll('td')):
+		if link.text == 'USA':
+			usa_tracker += 1
+			if usa_tracker == 2:
+				return i + 2
+	return 0
 
 
 class PlayerSet(TeamSet):
@@ -92,40 +98,45 @@ class PlayerSet(TeamSet):
 
 		text = ""
 
-		cache_dir = "C:/TrumpCards_cache"
-		filename = str(datetime.datetime.now())[:10] + "_teams"
-		complete_path = cache_dir + "/" + filename + ".txt"
+		cache_dir = "C:/TrumpCards_cache/"
+		filename = str(datetime.datetime.now())[:10] + "_"
+		complete_path = cache_dir + filename
+		existence_test_file_path = complete_path + ("India.txt")
+
+		players = []
 		
-		if os.path.exists(complete_path):
-			with open(complete_path) as f:
-				text = f.read()
-				f.close()
+		if os.path.exists(existence_test_file_path):
+			for filename in os.listdir(cache_dir):
+				if "homepage" in filename:
+					continue
+				team = cache_dir + filename
+				team_text = open(team).read()
+				soup = Soup(team_text)
+				td_list = soup.findAll('td')
+				players.extend([(link.a.get('href'), link.text) 
+								 for link in td_list[get_index(soup):]])
+
 		else:
 			for member in self.full_members:
 				team_page_url = "http://espncricinfo.com" + member[0]
 				try:
-					uf_fm = urllib.urlopen(team_page_url)
+					uf = urllib.urlopen(team_page_url)
 				except Exception:
 					sys.exit("\nPlease turn on your Internet connection.")
-				text += uf_fm.read()
-				cache_text(complete_path, text)
-
-		player_generator_re =r'<td[\sclas="diver]*><a href="([\w/\.?=]+)">([\w\s\']+)</a>[\s]*</td>' 
-		players = re.findall(player_generator_re, text)
+				team_text = uf.read()
+				soup = Soup(team_text)
+				td_list = soup.findAll('td')
+				players.extend([(link.a.get('href'), link.text) 
+								 for link in td_list[get_index(soup):]])
+				team_path = complete_path + member[1] + ".txt"
+				cache_text(team_path, team_text)
 
 		self.player_set = set(players)
 
 		self.player_list = list(self.player_set)
 
-"""
-class Player(object):
+		print 'TOTAL NUMBER OF PLAYERS : ', len(self.player_list)
 
-	def __init__(self, player_link):
-		# Initialize value holders for all stats
-
-	def read_stats(self):
-		# Read the data from the link and store the stats
-"""
 
 class Game(object):
 
@@ -174,5 +185,4 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
-	
+	main()	
