@@ -61,7 +61,7 @@ class TeamSet(object):
 			
 	def generate_teams(self):
 		"""
-		This method uses regular expressions to extract the links to the various team pages.
+		This method uses Soup to extract the links to the various team pages.
 		"""
 
 		soup = Soup(self.homepage_text)
@@ -92,7 +92,7 @@ class PlayerSet(TeamSet):
 
 	def generate_player_list(self):
 		"""
-		This method reads the HTML content of all the team pages, and uses regular expressions 
+		This method reads the HTML content of all the team pages, and uses Soup 
 		to extract links to each individual players page.
 		"""
 
