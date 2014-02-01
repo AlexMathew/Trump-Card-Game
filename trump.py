@@ -72,14 +72,8 @@ class TeamSet(object):
 
 
 def get_index(soup):
-	
-	usa_tracker = 0
-	for i, link in enumerate(soup.findAll('td')):
-		if link.text == 'USA':
-			usa_tracker += 1
-			if usa_tracker == 2:
-				return i + 2
-	return 0
+	td_list = soup.findAll('td')
+	return itertools.dropwhile(lambda x: td_list[x].text != "USA", reversed(xrange(len(td_list)))).next() + 2
 
 
 class PlayerSet(TeamSet):
