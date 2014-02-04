@@ -4,6 +4,7 @@ import os
 import datetime
 import sys
 from bs4 import BeautifulSoup as Soup
+import itertools
 
 
 def clear_old_cache(cache_dir):
@@ -61,7 +62,7 @@ class TeamSet(object):
 			
 	def generate_teams(self):
 		"""
-		This method uses Soup to extract the links to the various team pages.
+		This method parse the HTML of the page to extract the links to the various team pages.
 		"""
 
 		soup = Soup(self.homepage_text)
@@ -71,9 +72,8 @@ class TeamSet(object):
 
 
 
-def get_index(soup):
-	td_list = soup.findAll('td')
-	return itertools.dropwhile(lambda x: td_list[x].text != "USA", reversed(xrange(len(td_list)))).next() + 2
+def key_fn(s):
+	return s[1]
 
 
 class PlayerSet(TeamSet):
@@ -86,7 +86,7 @@ class PlayerSet(TeamSet):
 
 	def generate_player_list(self):
 		"""
-		This method reads the HTML content of all the team pages, and uses Soup 
+		This method reads the HTML content of all the team pages, and uses HTML parsing
 		to extract links to each individual players page.
 		"""
 
@@ -107,9 +107,9 @@ class PlayerSet(TeamSet):
 				team_text = open(team).read()
 				soup = Soup(team_text)
 				td_list = soup.findAll('td')
-				players.extend([(link.a.get('href'), link.text) 
-								 for link in td_list[get_index(soup):]])
-
+				players.extend([("http://espncricinfo.com" + link.a.get('href'), link.text) 
+								for link in soup.find(id = "rectPlyr_Playerlisttest").findAll('td')])
+				
 		else:
 			for member in self.full_members:
 				team_page_url = "http://espncricinfo.com" + member[0]
@@ -119,17 +119,18 @@ class PlayerSet(TeamSet):
 					sys.exit("\nPlease turn on your Internet connection.")
 				team_text = uf.read()
 				soup = Soup(team_text)
-				td_list = soup.findAll('td')
-				players.extend([(link.a.get('href'), link.text) 
-								 for link in td_list[get_index(soup):]])
+				players.extend([("http://espncricinfo.com" + link.a.get('href'), link.text) 
+								for link in soup.find(id = "rectPlyr_Playerlisttest").findAll('td')])
 				team_path = complete_path + member[1] + ".txt"
 				cache_text(team_path, team_text)
 
 		self.player_set = set(players)
 
-		self.player_list = list(self.player_set)
+		self.player_list = list(sorted(self.player_set, key = key_fn))
 
-		print 'TOTAL NUMBER OF PLAYERS : ', len(self.player_list)
+#		print 'TOTAL NUMBER OF PLAYERS : ', len(self.player_list)
+
+		return self.player_list
 
 
 class Game(object):
