@@ -2,7 +2,7 @@ import sys
 from bs4 import BeautifulSoup as Soup
 import urllib
 import psycopg2
-import revamped_trump
+import trump
 
 
 def modify_stats_types(q):
