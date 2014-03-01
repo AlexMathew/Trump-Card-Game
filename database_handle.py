@@ -3,7 +3,11 @@ from bs4 import BeautifulSoup as Soup
 import urllib
 import psycopg2
 import trump
+<<<<<<< HEAD
 import lxml
+=======
+
+>>>>>>> upstream/master
 
 def modify_stats_types(q):
 	for item in q:
