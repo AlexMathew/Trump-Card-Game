@@ -2,8 +2,8 @@ import sys
 from bs4 import BeautifulSoup as Soup
 import urllib
 import psycopg2
-import revamped_trump
-
+import trump
+import lxml
 
 def modify_stats_types(q):
 	for item in q:
@@ -109,14 +109,14 @@ def update_database(option):
 	command_insert_fc = "INSERT INTO fc_stats " + stats_types + " VALUES " + placeholder 		
 
 	
-	player_set = revamped_trump.PlayerSet()
+	player_set = trump.PlayerSet()
 	player_list = player_set.generate_player_list()
 
 	for i, player in enumerate(player_list):
 		print 'Currently updating stats of player ' + str(i + 1) + " -- " + str(player[1]) + "..." 
 
 		playerHtml = urllib.urlopen(player[0])
-		soup = Soup(playerHtml)
+		soup = Soup(playerHtml, "lxml")
 	
 		name = str(soup.title.text.split(' |')[0])
 		img_link = "http://espncricinfo.com" + soup.findAll('img')[1].get('src')
@@ -133,6 +133,11 @@ def update_database(option):
 		c.execute(command_insert_t20i, stats[2])
 		c.execute(command_insert_fc, stats[3])
 
+		if divmod(i+1, 10)[1] == 0:
+			print '\nIntermediate commit\n'
+			conn.commit()
+
+	print '\nFinal commit\n'
 	conn.commit()
 
 	c.close()
@@ -156,8 +161,9 @@ def main():
 			print "database_handle.py [--create] [--update] \n"
 			print "--create : Initial setup for the stat database"
 			print "--update : Updating the database"
-	except:
-		print "ERROR ENCOUNTERED !!\n"
+	except Exception as detail:
+		print detail
+		print "\nERROR ENCOUNTERED !!\n"
 		print "> Make sure you have trump.py in the same directory as this database setup program."
 		print "> Make sure you have the stat_database DB set up in PostgreSQL."
 		print "> If you run --create, make sure that this is the first time you are running this program. If it isn't the first time, use --update instead. "
