@@ -5,7 +5,7 @@ import datetime
 import sys
 from bs4 import BeautifulSoup as Soup
 import itertools
-
+import lxml
 
 def clear_old_cache(cache_dir):
 	"""
@@ -65,7 +65,7 @@ class TeamSet(object):
 		This method parse the HTML of the page to extract the links to the various team pages.
 		"""
 
-		soup = Soup(self.homepage_text)
+		soup = Soup(self.homepage_text, "lxml")
 		li_set = soup.findAll('li')
 		self.full_members = [(li_set[i+1].a.get('href'), li_set[i+1].text) 
 							 for i, link in enumerate(li_set) if link.text == '|'][:10]
@@ -105,7 +105,7 @@ class PlayerSet(TeamSet):
 					continue
 				team = cache_dir + filename
 				team_text = open(team).read()
-				soup = Soup(team_text)
+				soup = Soup(team_text, "lxml")
 				td_list = soup.findAll('td')
 				players.extend([("http://espncricinfo.com" + link.a.get('href'), link.text) 
 								for link in soup.find(id = "rectPlyr_Playerlisttest").findAll('td')])
@@ -128,7 +128,7 @@ class PlayerSet(TeamSet):
 
 		self.player_list = list(sorted(self.player_set, key = key_fn))
 
-#		print 'TOTAL NUMBER OF PLAYERS : ', len(self.player_list)
+		print 'TOTAL NUMBER OF PLAYERS : ', len(self.player_list)
 
 		return self.player_list
 
